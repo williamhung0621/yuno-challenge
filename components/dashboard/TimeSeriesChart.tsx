@@ -81,7 +81,7 @@ interface TimeSeriesChartProps {
 
 export function TimeSeriesChart({ filters }: TimeSeriesChartProps) {
   const [groupBy, setGroupBy] = useState<string>("none");
-  const { data, isLoading } = useTimeSeries(
+  const { data, isLoading, error } = useTimeSeries(
     groupBy === "none" ? undefined : groupBy,
     filters
   );
@@ -128,6 +128,10 @@ export function TimeSeriesChart({ filters }: TimeSeriesChartProps) {
       <CardContent className="px-4 pt-4 pb-4">
         {isLoading ? (
           <Skeleton className="h-[380px] w-full bg-muted/30" />
+        ) : error ? (
+          <div className="flex h-[380px] items-center justify-center text-sm text-destructive">
+            Failed to load data
+          </div>
         ) : !data || data.length === 0 ? (
           <div className="flex h-[380px] items-center justify-center text-sm text-muted-foreground">
             No data available

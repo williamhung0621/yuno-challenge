@@ -31,7 +31,7 @@ const PROCESSOR_COLORS: Record<string, string> = {
 };
 
 export function DeclineCodesTable({ filters }: DeclineCodesTableProps) {
-  const { data, isLoading } = useDeclineCodes(filters);
+  const { data, isLoading, error } = useDeclineCodes(filters);
 
   return (
     <Card className="gap-0 py-0 overflow-hidden">
@@ -58,6 +58,10 @@ export function DeclineCodesTable({ filters }: DeclineCodesTableProps) {
               <Skeleton key={i} className="h-10 w-full bg-muted/20 rounded-md" />
             ))}
           </div>
+        ) : error ? (
+          <p className="text-sm text-destructive py-10 text-center">
+            Failed to load decline codes
+          </p>
         ) : !data || data.length === 0 ? (
           <p className="text-sm text-muted-foreground py-10 text-center">
             No decline codes in current filter set

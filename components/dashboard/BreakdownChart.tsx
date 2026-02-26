@@ -80,7 +80,7 @@ interface BreakdownChartProps {
 
 export function BreakdownChart({ filters }: BreakdownChartProps) {
   const [dimension, setDimension] = useState<BreakdownDimension>("processor");
-  const { data, isLoading } = useBreakdown(dimension, filters);
+  const { data, isLoading, error } = useBreakdown(dimension, filters);
 
   return (
     <Card className="gap-0 py-0 overflow-hidden">
@@ -111,6 +111,10 @@ export function BreakdownChart({ filters }: BreakdownChartProps) {
       <CardContent className="px-4 pt-4 pb-4">
         {isLoading ? (
           <Skeleton className="h-[380px] w-full bg-muted/30" />
+        ) : error ? (
+          <div className="flex h-[380px] items-center justify-center text-sm text-destructive">
+            Failed to load data
+          </div>
         ) : !data || data.length === 0 ? (
           <div className="flex h-[380px] items-center justify-center text-sm text-muted-foreground">
             No data available

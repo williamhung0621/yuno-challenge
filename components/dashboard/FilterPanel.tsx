@@ -225,7 +225,7 @@ export function FilterPanel({ filters, onFilterChange, onReset }: FilterPanelPro
             onChange={(v) => onFilterChange("dateFrom", v)}
             placeholder="Jan 1, 2025"
             fromDate={new Date("2025-01-01T12:00:00")}
-            toDate={new Date("2025-01-21T12:00:00")}
+            toDate={filters.dateTo ? new Date(filters.dateTo + "T12:00:00") : new Date("2025-01-21T12:00:00")}
           />
         </div>
         <div className="space-y-1.5">
@@ -234,7 +234,7 @@ export function FilterPanel({ filters, onFilterChange, onReset }: FilterPanelPro
             value={filters.dateTo}
             onChange={(v) => onFilterChange("dateTo", v)}
             placeholder="Jan 21, 2025"
-            fromDate={new Date("2025-01-01T12:00:00")}
+            fromDate={filters.dateFrom ? new Date(filters.dateFrom + "T12:00:00") : new Date("2025-01-01T12:00:00")}
             toDate={new Date("2025-01-21T12:00:00")}
           />
         </div>
