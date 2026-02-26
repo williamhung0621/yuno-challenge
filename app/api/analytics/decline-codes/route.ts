@@ -1,0 +1,24 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getTransactions } from "@/lib/data/store";
+import { applyFilters } from "@/lib/analytics/filters";
+import { aggregateDeclineCodes } from "@/lib/analytics/aggregations";
+import type { FilterParams } from "@/types/analytics";
+
+export function GET(req: NextRequest) {
+  const { searchParams } = req.nextUrl;
+
+  const filters: FilterParams = {
+    paymentMethod: searchParams.get("paymentMethod") ?? undefined,
+    processor: searchParams.get("processor") ?? undefined,
+    country: searchParams.get("country") ?? undefined,
+    declineCategory: searchParams.get("declineCategory") ?? undefined,
+    dateFrom: searchParams.get("dateFrom") ?? undefined,
+    dateTo: searchParams.get("dateTo") ?? undefined,
+  };
+
+  const transactions = getTransactions();
+  const filtered = applyFilters(transactions, filters);
+  const codes = aggregateDeclineCodes(filtered);
+
+  return NextResponse.json(codes);
+}
