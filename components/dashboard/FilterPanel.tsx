@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -8,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { DatePicker } from "@/components/ui/date-picker";
 import type { FilterParams } from "@/types/analytics";
 
 interface FilterPanelProps {
@@ -21,6 +20,19 @@ const PROCESSORS = ["AcquireMax", "Kushki", "dLocal", "LatamPay"];
 const PAYMENT_METHODS = ["credit_card", "debit_card", "pix", "oxxo", "pse"];
 const COUNTRIES = ["MX", "CO", "AR", "BR"];
 const DECLINE_CATEGORIES = ["soft_decline", "hard_decline", "processing_error"];
+
+/** "credit_card" → "Credit Card" */
+function formatLabel(str: string): string {
+  return str.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-2.5">
+      {children}
+    </div>
+  );
+}
 
 function FilterSelect({
   label,
@@ -35,23 +47,33 @@ function FilterSelect({
   onChange: (value: string | undefined) => void;
   placeholder: string;
 }) {
+  const isActive = !!value;
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+      <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+        {isActive && (
+          <span className="w-1 h-1 rounded-full bg-primary inline-block" />
+        )}
         {label}
       </label>
       <Select
         value={value ?? "all"}
         onValueChange={(v) => onChange(v === "all" ? undefined : v)}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger
+          className={`w-full h-8 text-xs ${
+            isActive
+              ? "border-primary/50 bg-primary/8 text-foreground"
+              : "border-border bg-background/40 text-muted-foreground"
+          }`}
+        >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">{placeholder}</SelectItem>
           {options.map((opt) => (
-            <SelectItem key={opt} value={opt}>
-              {opt}
+            <SelectItem key={opt} value={opt} className="text-xs">
+              {formatLabel(opt)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -61,86 +83,91 @@ function FilterSelect({
 }
 
 export function FilterPanel({ filters, onFilterChange, onReset }: FilterPanelProps) {
-  const hasActiveFilters = Object.values(filters).some(Boolean);
+  const activeCount = Object.values(filters).filter(Boolean).length;
 
   return (
-    <div className="space-y-5 p-4">
-      <div>
-        <h2 className="text-sm font-semibold">Filters</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Narrow down transaction data
-        </p>
+    <div className="px-4 py-4 space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Filters
+        </span>
+        {activeCount > 0 && (
+          <button
+            onClick={onReset}
+            className="text-[10px] text-primary hover:text-primary/70 transition-colors tracking-wide"
+          >
+            Clear {activeCount}
+          </button>
+        )}
       </div>
 
-      <Separator />
-
-      <FilterSelect
-        label="Processor"
-        value={filters.processor}
-        options={PROCESSORS}
-        onChange={(v) => onFilterChange("processor", v)}
-        placeholder="All Processors"
-      />
-
-      <FilterSelect
-        label="Payment Method"
-        value={filters.paymentMethod}
-        options={PAYMENT_METHODS}
-        onChange={(v) => onFilterChange("paymentMethod", v)}
-        placeholder="All Methods"
-      />
-
-      <FilterSelect
-        label="Country"
-        value={filters.country}
-        options={COUNTRIES}
-        onChange={(v) => onFilterChange("country", v)}
-        placeholder="All Countries"
-      />
-
-      <FilterSelect
-        label="Decline Category"
-        value={filters.declineCategory}
-        options={DECLINE_CATEGORIES}
-        onChange={(v) => onFilterChange("declineCategory", v)}
-        placeholder="All Categories"
-      />
-
-      <Separator />
-
-      <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Date From
-        </label>
-        <input
-          type="date"
-          value={filters.dateFrom ?? ""}
-          onChange={(e) =>
-            onFilterChange("dateFrom", e.target.value || undefined)
-          }
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      {/* Processor + Method */}
+      <div className="space-y-3">
+        <SectionLabel>Processor &amp; Method</SectionLabel>
+        <FilterSelect
+          label="Processor"
+          value={filters.processor}
+          options={PROCESSORS}
+          onChange={(v) => onFilterChange("processor", v)}
+          placeholder="All processors"
+        />
+        <FilterSelect
+          label="Payment Method"
+          value={filters.paymentMethod}
+          options={PAYMENT_METHODS}
+          onChange={(v) => onFilterChange("paymentMethod", v)}
+          placeholder="All methods"
         />
       </div>
 
-      <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Date To
-        </label>
-        <input
-          type="date"
-          value={filters.dateTo ?? ""}
-          onChange={(e) =>
-            onFilterChange("dateTo", e.target.value || undefined)
-          }
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      {/* Geography */}
+      <div className="space-y-3">
+        <div className="h-px bg-border" />
+        <SectionLabel>Geography</SectionLabel>
+        <FilterSelect
+          label="Country"
+          value={filters.country}
+          options={COUNTRIES}
+          onChange={(v) => onFilterChange("country", v)}
+          placeholder="All countries"
         />
       </div>
 
-      {hasActiveFilters && (
-        <Button variant="outline" className="w-full" onClick={onReset}>
-          Reset Filters
-        </Button>
-      )}
+      {/* Decline type */}
+      <div className="space-y-3">
+        <div className="h-px bg-border" />
+        <SectionLabel>Decline Type</SectionLabel>
+        <FilterSelect
+          label="Category"
+          value={filters.declineCategory}
+          options={DECLINE_CATEGORIES}
+          onChange={(v) => onFilterChange("declineCategory", v)}
+          placeholder="All categories"
+        />
+      </div>
+
+      {/* Date range */}
+      <div className="space-y-3">
+        <div className="h-px bg-border" />
+        <SectionLabel>Date Range</SectionLabel>
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-medium text-muted-foreground">From</label>
+          <DatePicker
+            value={filters.dateFrom}
+            onChange={(v) => onFilterChange("dateFrom", v)}
+            placeholder="Start date"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-medium text-muted-foreground">To</label>
+          <DatePicker
+            value={filters.dateTo}
+            onChange={(v) => onFilterChange("dateTo", v)}
+            placeholder="End date"
+          />
+        </div>
+      </div>
     </div>
   );
 }

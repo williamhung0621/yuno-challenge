@@ -29,9 +29,51 @@ import { format, parseISO } from "date-fns";
 const GROUP_BY_OPTIONS = [
   { value: "none", label: "Overall" },
   { value: "processor", label: "By Processor" },
-  { value: "paymentMethod", label: "By Payment Method" },
+  { value: "paymentMethod", label: "By Method" },
   { value: "country", label: "By Country" },
 ];
+
+const GRID_COLOR = "oklch(0.22 0.026 255)";
+const AXIS_COLOR = "oklch(0.57 0.022 258)";
+
+interface TooltipEntry {
+  dataKey: string;
+  value: number;
+  color: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipEntry[];
+  label?: string;
+}
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg bg-popover border border-border px-3 py-2.5 shadow-xl text-xs min-w-[150px]">
+      <div className="font-semibold text-foreground mb-2">{label}</div>
+      <div className="space-y-1">
+        {payload.map((entry) => (
+          <div key={entry.dataKey} className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="text-muted-foreground truncate max-w-[80px]">
+                {entry.dataKey}
+              </span>
+            </div>
+            <span className="font-mono font-semibold" style={{ color: entry.color }}>
+              {entry.value?.toFixed(1)}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 interface TimeSeriesChartProps {
   filters: FilterParams;
@@ -44,10 +86,8 @@ export function TimeSeriesChart({ filters }: TimeSeriesChartProps) {
     filters
   );
 
-  // Transform series-first data to recharts flat format
   const chartData = (() => {
     if (!data || data.length === 0) return [];
-    // Collect all dates from first group (all groups have same dates)
     const dates = data[0].series.map((s) => s.date);
     return dates.map((date) => {
       const point: Record<string, unknown> = {
@@ -63,53 +103,73 @@ export function TimeSeriesChart({ filters }: TimeSeriesChartProps) {
   })();
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="text-base">Decline Rate Over Time</CardTitle>
+    <Card className="gap-0 py-0 overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between px-5 py-4 border-b border-border">
+        <div>
+          <CardTitle className="text-sm font-semibold">Decline Rate Over Time</CardTitle>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Dashed line = 22% baseline
+          </p>
+        </div>
         <Select value={groupBy} onValueChange={setGroupBy}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-44 h-7 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {GROUP_BY_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
+              <SelectItem key={o.value} value={o.value} className="text-xs">
                 {o.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent>
+
+      <CardContent className="px-4 pt-4 pb-4">
         {isLoading ? (
-          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-[380px] w-full bg-muted/30" />
         ) : !data || data.length === 0 ? (
-          <div className="flex h-64 items-center justify-center text-muted-foreground">
+          <div className="flex h-[380px] items-center justify-center text-sm text-muted-foreground">
             No data available
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
+          <div className="h-[380px]">
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={chartData}
-              margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+              margin={{ top: 10, right: 16, left: 0, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={GRID_COLOR}
+                vertical={false}
+              />
               <XAxis
                 dataKey="label"
-                tick={{ fontSize: 11 }}
-                interval={Math.ceil(chartData.length / 10)}
+                tick={{ fontSize: 11, fill: AXIS_COLOR }}
+                tickLine={false}
+                axisLine={{ stroke: GRID_COLOR }}
+                interval={Math.ceil(chartData.length / 7)}
               />
               <YAxis
                 tickFormatter={(v) => `${v}%`}
                 domain={[0, 100]}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11, fill: AXIS_COLOR }}
+                tickLine={false}
+                axisLine={false}
+                width={38}
               />
-              <Tooltip formatter={(v: number | undefined) => [v != null ? `${v.toFixed(1)}%` : "N/A", ""]} />
-              {data.length > 1 && <Legend />}
+              <Tooltip content={<CustomTooltip />} />
+              {data.length > 1 && (
+                <Legend
+                  wrapperStyle={{ fontSize: "11px", paddingTop: "12px", color: AXIS_COLOR }}
+                />
+              )}
               <ReferenceLine
                 y={22}
-                stroke="#f59e0b"
-                strokeDasharray="4 4"
-                label={{ value: "22% baseline", fill: "#f59e0b", fontSize: 11 }}
+                stroke="oklch(0.78 0.17 82)"
+                strokeDasharray="5 4"
+                strokeWidth={1.5}
               />
               {data.map((group, i) => (
                 <Line
@@ -119,11 +179,12 @@ export function TimeSeriesChart({ filters }: TimeSeriesChartProps) {
                   stroke={CHART_COLORS[i % CHART_COLORS.length]}
                   strokeWidth={2}
                   dot={false}
-                  activeDot={{ r: 4 }}
+                  activeDot={{ r: 3, strokeWidth: 0 }}
                 />
               ))}
             </LineChart>
           </ResponsiveContainer>
+          </div>
         )}
       </CardContent>
     </Card>
