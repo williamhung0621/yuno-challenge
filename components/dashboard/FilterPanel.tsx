@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -20,6 +21,18 @@ const PROCESSORS = ["AcquireMax", "Kushki", "dLocal", "LatamPay"];
 const PAYMENT_METHODS = ["credit_card", "debit_card", "pix", "oxxo", "pse"];
 const COUNTRIES = ["MX", "CO", "AR", "BR"];
 const DECLINE_CATEGORIES = ["soft_decline", "hard_decline", "processing_error"];
+const DECLINE_CODES = [
+  "issuer_unavailable",
+  "insufficient_funds",
+  "suspected_fraud",
+  "card_expired",
+  "invalid_card",
+  "do_not_honor",
+  "card_velocity_exceeded",
+  "processing_error",
+  "timeout",
+  "network_error",
+];
 
 /** "credit_card" → "Credit Card" */
 function formatLabel(str: string): string {
@@ -85,6 +98,14 @@ function FilterSelect({
 export function FilterPanel({ filters, onFilterChange, onReset }: FilterPanelProps) {
   const activeCount = Object.values(filters).filter(Boolean).length;
 
+  // Local state for the BIN input so we don't fire a URL update on every keystroke
+  const [binInput, setBinInput] = useState(filters.cardBin ?? "");
+
+  function commitBin(value: string) {
+    const trimmed = value.trim();
+    onFilterChange("cardBin", trimmed || undefined);
+  }
+
   return (
     <div className="px-4 py-4 space-y-5">
       {/* Header */}
@@ -145,6 +166,52 @@ export function FilterPanel({ filters, onFilterChange, onReset }: FilterPanelPro
           onChange={(v) => onFilterChange("declineCategory", v)}
           placeholder="All categories"
         />
+        <FilterSelect
+          label="Decline Code"
+          value={filters.declineCode}
+          options={DECLINE_CODES}
+          onChange={(v) => onFilterChange("declineCode", v)}
+          placeholder="All codes"
+        />
+      </div>
+
+      {/* Card BIN */}
+      <div className="space-y-3">
+        <div className="h-px bg-border" />
+        <SectionLabel>Card BIN</SectionLabel>
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+            {filters.cardBin && (
+              <span className="w-1 h-1 rounded-full bg-primary inline-block" />
+            )}
+            BIN Prefix
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            placeholder="e.g. 400001"
+            value={binInput}
+            onChange={(e) => setBinInput(e.target.value.replace(/\D/g, ""))}
+            onBlur={(e) => commitBin(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitBin(binInput);
+              if (e.key === "Escape") {
+                setBinInput("");
+                onFilterChange("cardBin", undefined);
+              }
+            }}
+            className={`w-full h-8 rounded-md border px-2.5 text-xs bg-background/40 outline-none transition-colors
+              ${filters.cardBin
+                ? "border-primary/50 bg-primary/8 text-foreground"
+                : "border-border text-muted-foreground"
+              }
+              focus:border-primary/50 focus:text-foreground placeholder:text-muted-foreground/50`}
+          />
+          <p className="text-[10px] text-muted-foreground">
+            Enter 6 digits · press Enter to apply
+          </p>
+        </div>
       </div>
 
       {/* Date range */}
@@ -156,7 +223,9 @@ export function FilterPanel({ filters, onFilterChange, onReset }: FilterPanelPro
           <DatePicker
             value={filters.dateFrom}
             onChange={(v) => onFilterChange("dateFrom", v)}
-            placeholder="Start date"
+            placeholder="Jan 1, 2025"
+            fromDate={new Date("2025-01-01T12:00:00")}
+            toDate={new Date("2025-01-21T12:00:00")}
           />
         </div>
         <div className="space-y-1.5">
@@ -164,7 +233,9 @@ export function FilterPanel({ filters, onFilterChange, onReset }: FilterPanelPro
           <DatePicker
             value={filters.dateTo}
             onChange={(v) => onFilterChange("dateTo", v)}
-            placeholder="End date"
+            placeholder="Jan 21, 2025"
+            fromDate={new Date("2025-01-01T12:00:00")}
+            toDate={new Date("2025-01-21T12:00:00")}
           />
         </div>
       </div>

@@ -18,6 +18,8 @@ export function useFilters(): {
     processor: searchParams.get("processor") ?? undefined,
     country: searchParams.get("country") ?? undefined,
     declineCategory: searchParams.get("declineCategory") ?? undefined,
+    declineCode: searchParams.get("declineCode") ?? undefined,
+    cardBin: searchParams.get("cardBin") ?? undefined,
     dateFrom: searchParams.get("dateFrom") ?? undefined,
     dateTo: searchParams.get("dateTo") ?? undefined,
   };

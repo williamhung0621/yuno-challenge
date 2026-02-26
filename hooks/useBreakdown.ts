@@ -29,6 +29,8 @@ export function useBreakdown(dimension: BreakdownDimension, filters: FilterParam
     filters.processor,
     filters.country,
     filters.declineCategory,
+    filters.declineCode,
+    filters.cardBin,
     filters.dateFrom,
     filters.dateTo,
   ]);

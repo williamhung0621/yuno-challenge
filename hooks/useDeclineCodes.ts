@@ -27,6 +27,8 @@ export function useDeclineCodes(filters: FilterParams) {
     filters.processor,
     filters.country,
     filters.declineCategory,
+    filters.declineCode,
+    filters.cardBin,
     filters.dateFrom,
     filters.dateTo,
   ]);

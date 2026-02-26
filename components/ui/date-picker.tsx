@@ -15,11 +15,16 @@ interface DatePickerProps {
   value: string | undefined; // "yyyy-MM-dd"
   onChange: (value: string | undefined) => void;
   placeholder?: string;
+  fromDate?: Date;
+  toDate?: Date;
 }
 
-export function DatePicker({ value, onChange, placeholder = "Pick a date" }: DatePickerProps) {
+export function DatePicker({ value, onChange, placeholder = "Pick a date", fromDate, toDate }: DatePickerProps) {
   // Parse as noon UTC to avoid off-by-one from timezone conversion
   const selected = value ? parseISO(value + "T12:00:00") : undefined;
+
+  // Open on the fromDate's month if provided, otherwise fall back to selected or today
+  const defaultMonth = selected ?? fromDate;
 
   return (
     <Popover>
@@ -42,6 +47,13 @@ export function DatePicker({ value, onChange, placeholder = "Pick a date" }: Dat
           onSelect={(date) => {
             onChange(date ? format(date, "yyyy-MM-dd") : undefined);
           }}
+          defaultMonth={defaultMonth}
+          startMonth={fromDate}
+          endMonth={toDate}
+          disabled={[
+            ...(fromDate ? [{ before: fromDate }] : []),
+            ...(toDate ? [{ after: toDate }] : []),
+          ]}
           captionLayout="label"
         />
         {value && (

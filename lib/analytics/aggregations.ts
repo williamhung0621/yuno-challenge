@@ -50,6 +50,10 @@ export function aggregateBreakdown(
       case "declineCategory":
         key = t.declineCategory ?? "none";
         break;
+      case "cardBin":
+        if (!t.cardBin) continue; // skip non-card transactions
+        key = t.cardBin;
+        break;
       default:
         key = "unknown";
     }

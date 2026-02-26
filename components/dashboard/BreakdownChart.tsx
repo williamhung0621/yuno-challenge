@@ -29,6 +29,7 @@ const DIMENSIONS: { value: BreakdownDimension; label: string }[] = [
   { value: "country", label: "Country" },
   { value: "declineCategory", label: "Decline Category" },
   { value: "declineCode", label: "Decline Code" },
+  { value: "cardBin", label: "Card BIN" },
 ];
 
 // Colors for dark theme

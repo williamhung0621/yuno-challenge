@@ -5,6 +5,8 @@ export interface FilterParams {
   processor?: string;
   country?: string;
   declineCategory?: string;
+  declineCode?: string;
+  cardBin?: string;
   dateFrom?: string;
   dateTo?: string;
 }
@@ -32,7 +34,8 @@ export type BreakdownDimension =
   | "paymentMethod"
   | "country"
   | "declineCode"
-  | "declineCategory";
+  | "declineCategory"
+  | "cardBin";
 
 export interface TimeSeriesDataPoint {
   date: string;

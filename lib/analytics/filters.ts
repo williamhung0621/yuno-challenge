@@ -10,6 +10,8 @@ export function applyFilters(
     if (params.processor && t.processor !== params.processor) return false;
     if (params.country && t.country !== params.country) return false;
     if (params.declineCategory && t.declineCategory !== params.declineCategory) return false;
+    if (params.declineCode && t.declineCode !== params.declineCode) return false;
+    if (params.cardBin && t.cardBin !== params.cardBin) return false;
     if (params.dateFrom) {
       const from = new Date(params.dateFrom);
       if (new Date(t.timestamp) < from) return false;
